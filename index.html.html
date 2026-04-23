@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whatto</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f7f7f5;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;font-family:'DM Sans',sans-serif}
+#app{width:100%;max-width:440px}
+h1{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:4px;color:#111;line-height:1}
+.sub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#aaa;margin-bottom:1.5rem}
+.tabs{display:flex;gap:8px;margin-bottom:1.3rem;flex-wrap:wrap}
+.tab{padding:7px 18px;border-radius:20px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.tab.on{background:#e63946;border-color:#e63946;color:#fff}
+.tab:hover:not(.on){border-color:#bbb;color:#444}
+#btn{width:100%;padding:1.1rem;background:#e63946;border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:4px;cursor:pointer;margin-bottom:1.2rem;transition:opacity .2s,transform .1s}
+#btn:active{transform:scale(0.98)}
+#btn:disabled{opacity:.5;cursor:not-allowed}
+#load{text-align:center;padding:2rem;display:none}
+.spin{width:32px;height:32px;border:2px solid #eee;border-top-color:#e63946;border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 10px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#load p{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#bbb}
+#card{border-radius:16px;border:1.5px solid #e8e8e8;overflow:hidden;display:none;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.06)}
+#poster{width:100%;max-height:340px;object-fit:cover;object-position:top;display:block}
+#music-cover{width:100%;aspect-ratio:1;object-fit:cover;display:block;max-height:260px}
+#yt-container{width:100%;display:none;background:#000}
+#yt-player{width:100%;aspect-ratio:16/9;border:none}
+.info{padding:1.1rem 1.3rem 1.5rem}
+.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;letter-spacing:2px;text-transform:uppercase;background:#f5f5f5;color:#888;margin-bottom:10px}
+.badge.reddit{background:#ff4500;color:#fff}
+.badge.music{background:#a259ff;color:#fff}
+.title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:1px;line-height:1.1;color:#111;margin-bottom:6px}
+.meta{font-size:13px;color:#666;margin-bottom:10px}
+.genres{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.genre{padding:3px 10px;border-radius:20px;border:1px solid #eee;font-size:11px;color:#999}
+.rating{font-size:14px;color:#f5a623;font-weight:500;margin-bottom:10px}
+.overview{font-size:13px;color:#555;line-height:1.7}
+.reddit-body{font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+#err{padding:1rem;text-align:center;color:#c0392b;font-size:13px;display:none;background:#fdf0f0;border-radius:10px;margin-bottom:1rem}
+#more{width:100%;margin-top:.8rem;padding:.8rem;background:#fff;border:1.5px solid #eee;border-radius:10px;color:#999;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;display:none}
+#more:hover{border-color:#ccc;color:#444}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>WHATTO</h1>
+  <p class="sub">Random generator</p>
+  <div class="tabs">
+    <button class="tab on" data-t="movie">Film</button>
+    <button class="tab" data-t="tv">TV Show</button>
+    <button class="tab" data-t="music">Muzika</button>
+    <button class="tab" data-t="reddit">Reddit priče</button>
+    <button class="tab" data-t="all">Sve</button>
+  </div>
+  <button id="btn">RANDOM</button>
+  <div id="err"></div>
+  <div id="load"><div class="spin"></div><p>tražim nešto...</p></div>
+  <div id="card">
+    <img id="poster" src="" alt="" style="display:none">
+    <img id="music-cover" src="" alt="" style="display:none">
+    <div id="yt-container"><iframe id="yt-player" allowfullscreen allow="autoplay"></iframe></div>
+    <div class="info">
+      <div class="badge" id="badge"></div>
+      <div class="title" id="title"></div>
+      <div class="meta" id="meta"></div>
+      <div class="genres" id="genres"></div>
+      <div class="rating" id="rating"></div>
+      <div class="overview" id="overview"></div>
+      <div class="reddit-body" id="reddit-body" style="display:none"></div>
+    </div>
+  </div>
+  <button id="more">još jedan ↺</button>
+</div>
+
+<script>
+const TMDB_BEARER='eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNmZjYTEzMzM5ZTRmM2Y4ZmZhMzNlODEwMDQzYWY5NyIsIm5iZiI6MTc1NjgxMzYwOS45MjQsInN1YiI6IjY4YjZkOTI5ODRkNjU5NmMyMjFmMmIzZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.3JJVrlIFT8kum-sZSbjXjf39SO5-9zP2hzV-NPQDlZY';
+const YT_KEY='AIzaSyDIuouRO0P8l9wOr2ttMNy9gPvD4Jj4UUc';
+
+const MUSIC_TERMS=[
+  'pop hits 2024','hip hop 2024','rock classics','country hits','jazz classics',
+  'r&b soul hits','electronic dance music','heavy metal','reggae hits','latin pop',
+  'blues guitar','folk music','indie rock','punk rock','classical music',
+  'funk music','disco hits','alternative rock','trap music','afrobeat',
+  'k-pop hits','80s greatest hits','90s hits','2000s pop hits',
+  'drake official','taylor swift official','eminem official','beyonce official',
+  'coldplay official','radiohead official','kendrick lamar official',
+  'ed sheeran official','billie eilish official','post malone official',
+  'the weeknd official','metallica official','acdc official','nirvana official',
+  'red hot chili peppers official','dua lipa official','harry styles official',
+  'bad bunny official','j balvin official','ozuna official',
+];
+
+const SUBS=[
+  {sub:'nosleep',label:'👻 NoSleep'},
+  {sub:'creepy',label:'😨 Creepy'},
+  {sub:'glitch_in_the_matrix',label:'🌀 Glitch'},
+  {sub:'tifu',label:'😅 TIFU'},
+  {sub:'Paranormal',label:'👁 Paranormalno'},
+  {sub:'letsnotmeet',label:'😱 Letsnotmeet'},
+  {sub:'mildlyterrifying',label:'😬 Jezivo'},
+  {sub:'unbelievable',label:'😲 Nevjerojatno'},
+];
+
+let curType='movie';
+const gMap={28:'Akcija',18:'Drama',35:'Komedija',27:'Horor',878:'Sci-Fi',10749:'Romansa',12:'Avantura',16:'Animacija',80:'Kriminal',99:'Dokumentarac',14:'Fantazija',53:'Triler',37:'Western',9648:'Misterija',10751:'Obiteljski',10765:'Sci-Fi/Fantazija',10759:'Akcija/Avantura'};
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+
+async function tmdb(path){
+  const r=await fetch('https://api.themoviedb.org/3'+path,{headers:{Authorization:'Bearer '+TMDB_BEARER}});
+  if(!r.ok) throw new Error('TMDB greška '+r.status);
+  return r.json();
+}
+
+async function fetchMovie(){
+  const page=ri(1,400);
+  const d=await tmdb(`/discover/movie?page=${page}&sort_by=vote_count.asc&vote_count.gte=10&language=en-US`);
+  if(!d.results?.length) throw new Error('Nema rezultata');
+  const it=d.results[ri(0,d.results.length-1)];
+  return{type:'movie',title:it.title,year:(it.release_date||'').slice(0,4),overview:it.overview,poster:it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:'',rating:it.vote_average?(+it.vote_average).toFixed(1):'',genres:(it.genre_ids||[]).map(id=>gMap[id]).filter(Boolean).slice(0,4)};
+}
+
+async function fetchTV(){
+  const page=ri(1,400);
+  const d=await tmdb(`/discover/tv?page=${page}&sort_by=vote_count.asc&vote_count.gte=5&language=en-US`);
+  if(!d.results?.length) throw new Error('Nema rezultata');
+  const it=d.results[ri(0,d.results.length-1)];
+  return{type:'tv',title:it.name,year:(it.first_air_date||'').slice(0,4),overview:it.overview,poster:it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:'',rating:it.vote_average?(+it.vote_average).toFixed(1):'',genres:(it.genre_ids||[]).map(id=>gMap[id]).filter(Boolean).slice(0,4)};
+}
+
+async function fetchMusic(){
+  // Korak 1: iTunes daje random track
+  const term=MUSIC_TERMS[ri(0,MUSIC_TERMS.length-1)];
+  const offset=ri(0,150);
+  const itunesUrl=`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=50&offset=${offset}`;
+  const ir=await fetch(itunesUrl);
+  if(!ir.ok) throw new Error('iTunes greška');
+  const id=await ir.json();
+  const tracks=id.results.filter(t=>t.trackName&&t.artistName);
+  if(!tracks.length) throw new Error('Nema rezultata, pokušaj ponovo');
+  const track=tracks[ri(0,tracks.length-1)];
+
+  // Korak 2: YouTube search za tu pjesmu
+  const query=`${track.artistName} ${track.trackName} official`;
+  const ytUrl=`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=5&key=${YT_KEY}`;
+  const yr=await fetch(ytUrl);
+  if(!yr.ok) throw new Error('YouTube greška '+yr.status);
+  const yd=await yr.json();
+  if(!yd.items?.length) throw new Error('Nema YouTube videa');
+  const vid=yd.items[ri(0,Math.min(2,yd.items.length-1))];
+
+  return{
+    type:'music',
+    title:track.trackName,
+    artist:track.artistName,
+    album:track.collectionName||'',
+    cover:track.artworkUrl100?.replace('100x100','600x600')||'',
+    genre:track.primaryGenreName||'Muzika',
+    videoId:vid.id.videoId
+  };
+}
+
+async function fetchReddit(){
+  const sub=SUBS[ri(0,SUBS.length-1)];
+  const sort=['hot','top','new'][ri(0,2)];
+  const r=await fetch(`https://www.reddit.com/r/${sub.sub}/${sort}.json?limit=50&t=month`,{headers:{'User-Agent':'whatto/1.0'}});
+  if(!r.ok) throw new Error('Reddit greška '+r.status);
+  const d=await r.json();
+  const posts=d.data.children.filter(p=>{
+    const t=p.data.selftext;
+    return t&&t.length>300&&!p.data.stickied&&t!=='[removed]'&&t!=='[deleted]';
+  });
+  if(!posts.length) throw new Error('Nema priča, pokušaj ponovo');
+  const post=posts[ri(0,posts.length-1)].data;
+  return{type:'reddit',subreddit:sub.label,title:post.title,text:post.selftext,score:post.score,comments:post.num_comments,author:post.author};
+}
+
+async function getItem(){
+  const pick=curType==='all'?['movie','tv','music','reddit'][ri(0,3)]:curType;
+  if(pick==='movie') return fetchMovie();
+  if(pick==='tv') return fetchTV();
+  if(pick==='music') return fetchMusic();
+  return fetchReddit();
+}
+
+function show(it){
+  document.getElementById('card').style.display='block';
+  document.getElementById('more').style.display='block';
+  document.getElementById('err').style.display='none';
+
+  const badge=document.getElementById('badge');
+  document.getElementById('poster').style.display='none';
+  document.getElementById('music-cover').style.display='none';
+  document.getElementById('yt-container').style.display='none';
+  document.getElementById('overview').style.display='none';
+  document.getElementById('reddit-body').style.display='none';
+  document.getElementById('genres').innerHTML='';
+  document.getElementById('rating').innerHTML='';
+
+  if(it.type==='music'){
+    badge.textContent='🎵 '+it.genre;
+    badge.className='badge music';
+    document.getElementById('title').textContent=it.title;
+    document.getElementById('meta').innerHTML=`<strong style="color:#111">${it.artist}</strong>${it.album?' · '+it.album:''}`;
+
+    // Prikaži cover dok se YT učitava
+    if(it.cover){
+      const mc=document.getElementById('music-cover');
+      mc.src=it.cover; mc.style.display='block';
+    }
+
+    // Embed YouTube player
+    const ytc=document.getElementById('yt-container');
+    const ytp=document.getElementById('yt-player');
+    ytp.src=`https://www.youtube.com/embed/${it.videoId}?autoplay=1&rel=0&modestbranding=1`;
+    ytc.style.display='block';
+    // Sakrij cover kad YT učita
+    ytp.onload=()=>{document.getElementById('music-cover').style.display='none';};
+
+  } else if(it.type==='reddit'){
+    badge.textContent=it.subreddit;
+    badge.className='badge reddit';
+    document.getElementById('title').textContent=it.title;
+    document.getElementById('meta').innerHTML=`u/${it.author} · ▲ ${it.score.toLocaleString()} · 💬 ${it.comments}`;
+    const rb=document.getElementById('reddit-body');
+    rb.style.display='block'; rb.textContent=it.text;
+  } else {
+    badge.textContent=it.type==='movie'?'Film':'TV Show';
+    badge.className='badge';
+    document.getElementById('title').textContent=it.title||'—';
+    document.getElementById('meta').innerHTML=it.year||'';
+    document.getElementById('rating').innerHTML=it.rating?`★ ${it.rating}`:'';
+    document.getElementById('genres').innerHTML=(it.genres||[]).map(g=>`<span class="genre">${g}</span>`).join('');
+    const ov=document.getElementById('overview');
+    ov.style.display='block'; ov.textContent=it.overview||'';
+    if(it.poster){
+      const p=document.getElementById('poster');
+      p.src=it.poster; p.style.display='block';
+    }
+  }
+}
+
+async function doRandom(){
+  // Zaustavi stari YT player
+  const ytp=document.getElementById('yt-player');
+  ytp.src='';
+
+  const btn=document.getElementById('btn');
+  btn.disabled=true;
+  document.getElementById('load').style.display='block';
+  document.getElementById('card').style.display='none';
+  document.getElementById('more').style.display='none';
+  document.getElementById('err').style.display='none';
+  try{show(await getItem());}
+  catch(e){
+    const el=document.getElementById('err');
+    el.textContent='Greška: '+e.message;
+    el.style.display='block';
+  }finally{
+    btn.disabled=false;
+    document.getElementById('load').style.display='none';
+  }
+}
+
+document.getElementById('btn').addEventListener('click',doRandom);
+document.getElementById('more').addEventListener('click',doRandom);
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    curType=t.dataset.t;
+    document.getElementById('yt-player').src='';
+  });
+});
+</script>
+</body>
+</html>
