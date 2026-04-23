@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whatto</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f7f7f5;min-height:100vh;font-family:'DM Sans',sans-serif;display:flex;justify-content:center}
+#wrap{width:100%;max-width:440px;min-height:100vh;position:relative}
+
+/* HOME */
+#screen-home{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1.5rem;text-align:center}
+#screen-home h1{font-family:'Bebas Neue',sans-serif;font-size:4.5rem;letter-spacing:6px;color:#111;line-height:1}
+#screen-home .sub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#aaa;margin-bottom:3rem}
+.home-btns{display:flex;flex-direction:column;gap:12px;width:100%}
+.btn-random{padding:1.2rem;background:#e63946;border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:4px;cursor:pointer;transition:transform .1s}
+.btn-random:active{transform:scale(0.97)}
+.btn-mood{padding:1rem;background:#fff;border:1.5px solid #ddd;border-radius:12px;color:#555;font-size:15px;cursor:pointer;transition:border-color .15s}
+.btn-mood:hover{border-color:#bbb;color:#111}
+
+/* MOOD */
+#screen-mood{display:none;flex-direction:column;padding:1.5rem}
+.mood-header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.back-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mood-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:#111}
+.mood-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mood-card{padding:1rem;background:#fff;border:1.5px solid #eee;border-radius:12px;cursor:pointer;transition:all .15s}
+.mood-card:hover{border-color:#e63946;transform:scale(1.02)}
+.mood-card:active{transform:scale(0.98)}
+.mood-emoji{font-size:1.4rem;margin-bottom:6px}
+.mood-name{font-size:12px;font-weight:500;color:#111;line-height:1.3}
+
+/* RESULT */
+#screen-result{display:none;flex-direction:column;padding:1.5rem}
+.result-header{display:flex;align-items:center;gap:10px;margin-bottom:1.2rem}
+.mood-pill{padding:4px 14px;border-radius:20px;background:#111;color:#fff;font-size:11px;letter-spacing:1px;text-transform:uppercase;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-header .back-btn{flex-shrink:0}
+
+#load{text-align:center;padding:3rem;display:none}
+.spin{width:32px;height:32px;border:2px solid #eee;border-top-color:#e63946;border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 10px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#load p{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#bbb}
+
+#card{border-radius:16px;border:1.5px solid #e8e8e8;overflow:hidden;display:none;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.06);margin-bottom:1rem}
+.cover-wrap{position:relative}
+.cover-wrap img{width:100%;max-height:340px;object-fit:cover;object-position:top;display:block}
+.play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.15);cursor:pointer;transition:background .2s}
+.play-overlay:hover{background:rgba(0,0,0,0.35)}
+.play-circle{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:24px;padding-left:4px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.no-trailer .play-overlay{display:none}
+
+.info{padding:1.1rem 1.3rem 1.5rem}
+.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;letter-spacing:2px;text-transform:uppercase;background:#f5f5f5;color:#888;margin-bottom:10px}
+.ftitle{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:1px;line-height:1.1;color:#111;margin-bottom:6px}
+.meta{font-size:12px;color:#bbb;margin-bottom:10px}
+.genres{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.genre{padding:3px 10px;border-radius:20px;border:1px solid #eee;font-size:11px;color:#999}
+.rating{font-size:14px;color:#f5a623;font-weight:500;margin-bottom:10px}
+.overview{font-size:13px;color:#555;line-height:1.7}
+
+#btn-next{width:100%;padding:1rem;background:#e63946;border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;cursor:pointer;margin-bottom:.8rem;transition:opacity .2s}
+#btn-next:disabled{opacity:.5;cursor:not-allowed}
+#btn-change{width:100%;padding:.8rem;background:#fff;border:1.5px solid #eee;border-radius:10px;color:#999;font-size:14px;cursor:pointer}
+#btn-change:hover{border-color:#ccc;color:#444}
+
+/* Trailer overlay */
+#trailer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;padding:1rem}
+#trailer-overlay.open{display:flex}
+#trailer-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#trailer-close:hover{background:rgba(255,255,255,0.3)}
+#trailer-frame{width:100%;max-width:600px;aspect-ratio:16/9;border:none;border-radius:8px}
+#trailer-title{color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;margin-top:14px;text-align:center}
+</style>
+</head>
+<body>
+
+<div id="trailer-overlay">
+  <button id="trailer-close">✕</button>
+  <iframe id="trailer-frame" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  <div id="trailer-title"></div>
+</div>
+
+<div id="wrap">
+
+<!-- HOME -->
+<div id="screen-home">
+  <h1>WHATTO</h1>
+  <p class="sub">Random generator</p>
+  <div class="home-btns">
+    <button class="btn-random" id="btn-full-random">RANDOM</button>
+    <button class="btn-mood" id="btn-open-mood">I'm feeling... 🎭</button>
+  </div>
+</div>
+
+<!-- MOOD -->
+<div id="screen-mood">
+  <div class="mood-header">
+    <button class="back-btn" id="mood-back">←</button>
+    <h2>How are you feeling?</h2>
+  </div>
+  <div class="mood-grid" id="mood-grid"></div>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result">
+  <div class="result-header">
+    <div class="mood-pill" id="active-mood-label"></div>
+    <button class="back-btn" id="result-back">✕</button>
+  </div>
+  <div id="load"><div class="spin"></div><p>searching...</p></div>
+  <div id="card">
+    <div class="cover-wrap" id="cover-wrap">
+      <img id="poster" src="" alt="">
+      <div class="play-overlay" id="play-overlay"><div class="play-circle">▶</div></div>
+    </div>
+    <div class="info">
+      <div class="badge">FILM</div>
+      <div class="ftitle" id="ftitle"></div>
+      <div class="meta" id="meta"></div>
+      <div class="genres" id="genres"></div>
+      <div class="rating" id="rating"></div>
+      <div class="overview" id="overview"></div>
+    </div>
+  </div>
+  <button id="btn-next">NEXT ↺</button>
+  <button id="btn-change">change mood</button>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+const TMDB='eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNmZjYTEzMzM5ZTRmM2Y4ZmZhMzNlODEwMDQzYWY5NyIsIm5iZiI6MTc1NjgxMzYwOS45MjQsInN1YiI6IjY4YjZkOTI5ODRkNjU5NmMyMjFmMmIzZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.3JJVrlIFT8kum-sZSbjXjf39SO5-9zP2hzV-NPQDlZY';
+
+const MOODS=[
+  {name:'I hate everyone',emoji:'😤',genres:[35,27],sort:'vote_count.asc'},
+  {name:'Bored af',emoji:'😑',genres:[28,53,9648],sort:'popularity.desc'},
+  {name:'Just existing',emoji:'🫥',genres:[],sort:'vote_count.asc'},
+  {name:'Send help',emoji:'🙃',genres:[35,10751],sort:'vote_average.desc'},
+  {name:'Existential crisis mode',emoji:'🌀',genres:[878,18,14],sort:'vote_count.asc'},
+  {name:'3am bad decisions',emoji:'🌙',genres:[27,53,9648],sort:'vote_count.asc'},
+  {name:'My therapist would hate this',emoji:'🛋️',genres:[80,53,18],sort:'vote_count.asc'},
+  {name:'Zero braincells',emoji:'🧠',genres:[28,12],sort:'popularity.desc'},
+  {name:'Doomscrolling champion',emoji:'📱',genres:[99,36],sort:'vote_average.desc'},
+  {name:'Built different',emoji:'💪',genres:[36,18,28],sort:'vote_average.desc'},
+  {name:'Delulu but make it work',emoji:'✨',genres:[10749,35,14],sort:'vote_count.asc'},
+  {name:'Dopamine dealer',emoji:'⚡',genres:[35,12,16],sort:'vote_average.desc'},
+  {name:'Chaotic good energy',emoji:'🎲',genres:[12,14,28],sort:'vote_count.asc'},
+  {name:'Brain rotted but happy',emoji:'🍔',genres:[16,35,10751],sort:'popularity.desc'},
+];
+
+const gMap={28:'Action',18:'Drama',35:'Comedy',27:'Horror',878:'Sci-Fi',10749:'Romance',12:'Adventure',16:'Animation',80:'Crime',99:'Documentary',14:'Fantasy',53:'Thriller',37:'Western',9648:'Mystery',10751:'Family',10765:'Sci-Fi/Fantasy',10759:'Action/Adventure',36:'History'};
+
+let activeMood=null;
+let curTrailerId=null;
+let curTitle='';
+
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+
+function showScreen(name){
+  document.getElementById('screen-home').style.display=name==='home'?'flex':'none';
+  document.getElementById('screen-mood').style.display=name==='mood'?'flex':'none';
+  document.getElementById('screen-result').style.display=name==='result'?'flex':'none';
+}
+
+// Build mood grid
+const grid=document.getElementById('mood-grid');
+MOODS.forEach((m,i)=>{
+  const card=document.createElement('div');
+  card.className='mood-card';
+  card.innerHTML=`<div class="mood-emoji">${m.emoji}</div><div class="mood-name">${m.name}</div>`;
+  card.addEventListener('click',()=>selectMood(i));
+  grid.appendChild(card);
+});
+
+function selectMood(i){
+  activeMood=i;
+  document.getElementById('active-mood-label').textContent=MOODS[i].emoji+' '+MOODS[i].name;
+  showScreen('result');
+  fetchAndShow();
+}
+
+async function tmdb(path){
+  const r=await fetch('https://api.themoviedb.org/3'+path,{headers:{Authorization:'Bearer '+TMDB}});
+  if(!r.ok) throw new Error('TMDB error '+r.status);
+  return r.json();
+}
+
+async function getTrailer(id){
+  try{
+    const d=await tmdb(`/movie/${id}/videos?language=en-US`);
+    const t=(d.results||[]).filter(v=>v.site==='YouTube'&&(v.type==='Trailer'||v.type==='Teaser'));
+    return t.length?t[0].key:null;
+  }catch(e){return null;}
+}
+
+async function fetchMovie(){
+  const mood=activeMood!==null?MOODS[activeMood]:null;
+  const page=ri(1,300);
+
+  // Pokušaj s mood filterom
+  if(mood&&mood.genres.length){
+    const genre=mood.genres[ri(0,mood.genres.length-1)];
+    const url=`/discover/movie?page=${page}&sort_by=${mood.sort}&vote_count.gte=10&language=en-US&with_genres=${genre}`;
+    const d=await tmdb(url);
+    if(d.results?.length){
+      const it=d.results[ri(0,d.results.length-1)];
+      const trailerId=await getTrailer(it.id);
+      return buildResult(it,trailerId);
+    }
+  }
+
+  // Fallback — bez genre filtera
+  const fallbackSort=mood?mood.sort:'vote_count.asc';
+  const url2=`/discover/movie?page=${page}&sort_by=${fallbackSort}&vote_count.gte=10&language=en-US`;
+  const d2=await tmdb(url2);
+  if(!d2.results?.length) throw new Error('No results, try again');
+  const it=d2.results[ri(0,d2.results.length-1)];
+  const trailerId=await getTrailer(it.id);
+  return buildResult(it,trailerId);
+}
+
+function buildResult(it,trailerId){
+  return{
+    title:it.title,
+    year:(it.release_date||'').slice(0,4),
+    overview:it.overview,
+    poster:it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:'',
+    rating:it.vote_average?(+it.vote_average).toFixed(1):'',
+    genres:(it.genre_ids||[]).map(id=>gMap[id]).filter(Boolean).slice(0,4),
+    trailerId
+  };
+}
+
+async function fetchAndShow(){
+  curTrailerId=null;
+  closeTrailer();
+  const btn=document.getElementById('btn-next');
+  btn.disabled=true;
+  document.getElementById('load').style.display='block';
+  document.getElementById('card').style.display='none';
+  try{
+    const it=await fetchMovie();
+    curTrailerId=it.trailerId||null;
+    curTitle=it.title;
+    document.getElementById('ftitle').textContent=it.title||'—';
+    document.getElementById('meta').textContent=it.year||'';
+    document.getElementById('rating').innerHTML=it.rating?`★ ${it.rating}`:'';
+    document.getElementById('genres').innerHTML=(it.genres||[]).map(g=>`<span class="genre">${g}</span>`).join('');
+    document.getElementById('overview').textContent=it.overview||'';
+    if(it.poster) document.getElementById('poster').src=it.poster;
+    const cw=document.getElementById('cover-wrap');
+    const po=document.getElementById('play-overlay');
+    if(it.trailerId){cw.classList.remove('no-trailer');po.style.display='flex';}
+    else{cw.classList.add('no-trailer');po.style.display='none';}
+    document.getElementById('card').style.display='block';
+  }catch(e){
+    // Silent retry on error
+    setTimeout(fetchAndShow, 500);
+    return;
+  }finally{
+    btn.disabled=false;
+    document.getElementById('load').style.display='none';
+  }
+}
+
+function closeTrailer(){
+  document.getElementById('trailer-frame').src='';
+  document.getElementById('trailer-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+document.getElementById('btn-full-random').addEventListener('click',()=>{
+  activeMood=null;
+  document.getElementById('active-mood-label').textContent='🎲 Total random';
+  showScreen('result');
+  fetchAndShow();
+});
+document.getElementById('btn-open-mood').addEventListener('click',()=>showScreen('mood'));
+document.getElementById('mood-back').addEventListener('click',()=>showScreen('home'));
+document.getElementById('result-back').addEventListener('click',()=>showScreen('home'));
+document.getElementById('btn-next').addEventListener('click',fetchAndShow);
+document.getElementById('btn-change').addEventListener('click',()=>showScreen('mood'));
+
+document.getElementById('play-overlay').addEventListener('click',()=>{
+  if(!curTrailerId) return;
+  document.getElementById('trailer-frame').src=`https://www.youtube.com/embed/${curTrailerId}?autoplay=1&rel=0`;
+  document.getElementById('trailer-title').textContent=curTitle;
+  document.getElementById('trailer-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+});
+document.getElementById('trailer-close').addEventListener('click',closeTrailer);
+document.getElementById('trailer-overlay').addEventListener('click',function(e){if(e.target===this)closeTrailer();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTrailer();});
+
+showScreen('home');
+</script>
+</body>
+</html>
