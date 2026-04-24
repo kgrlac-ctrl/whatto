@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whatto</title>
+<link rel="manifest" href="/whatto/manifest.json">
+<meta name="theme-color" content="#000000">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f7f7f5;min-height:100vh;font-family:'DM Sans',sans-serif;display:flex;justify-content:center}
+#wrap{width:100%;max-width:440px;min-height:100vh;position:relative}
+#screen-home{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1.5rem;text-align:center}
+#screen-home h1{font-family:'Bebas Neue',sans-serif;font-size:4.5rem;letter-spacing:6px;color:#111;line-height:1}
+#screen-home .sub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#aaa;margin-bottom:3rem}
+.home-btns{display:flex;flex-direction:column;gap:12px;width:100%}
+.btn-random{padding:1.2rem;background:#e63946;border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:4px;cursor:pointer;transition:transform .1s}
+.btn-random:active{transform:scale(0.97)}
+.btn-mood{padding:1rem;background:#111;border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:500;cursor:pointer;transition:background .15s}
+.btn-mood:hover{background:#333}
+#screen-mood{display:none;flex-direction:column;padding:1.5rem}
+.mood-header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.back-btn{width:38px;height:38px;border-radius:50%;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:500;color:#555}
+.back-btn:hover{border-color:#999;color:#111}
+.mood-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:#111}
+.mood-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mood-card{padding:1rem;background:#fff;border:1.5px solid #eee;border-radius:12px;cursor:pointer;transition:all .15s}
+.mood-card:hover{border-color:#e63946;transform:scale(1.02)}
+.mood-card:active{transform:scale(0.98)}
+.mood-emoji{font-size:1.4rem;margin-bottom:6px}
+.mood-name{font-size:12px;font-weight:500;color:#111;line-height:1.3}
+#screen-result{display:none;flex-direction:column;padding:1.5rem}
+.result-header{display:flex;align-items:center;gap:10px;margin-bottom:1.2rem}
+.mood-pill{padding:5px 14px;border-radius:20px;background:#111;color:#fff;font-size:11px;letter-spacing:1px;text-transform:uppercase;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-tabs{display:flex;gap:6px;margin-bottom:1.2rem;flex-wrap:wrap}
+.cat-tab{flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;min-width:0}
+.cat-tab.on{background:#e63946;border-color:#e63946;color:#fff}
+.cat-tab:hover:not(.on){border-color:#bbb;color:#444}
+#reddit-cats{display:none;margin-bottom:1rem;flex-wrap:wrap;gap:6px}
+.rcat-btn{padding:6px 12px;border-radius:20px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.rcat-btn.on{background:#ff4500;border-color:#ff4500;color:#fff}
+.rcat-btn:hover:not(.on){border-color:#bbb;color:#444}
+#load{text-align:center;padding:3rem;display:none}
+.spin{width:32px;height:32px;border:2px solid #eee;border-top-color:#e63946;border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 10px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#load p{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#bbb}
+#card{border-radius:16px;border:1.5px solid #e8e8e8;overflow:hidden;display:none;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.06);margin-bottom:1rem}
+.cover-wrap{position:relative}
+.cover-wrap img{width:100%;max-height:340px;object-fit:cover;object-position:top;display:block}
+.cover-wrap img.landscape{max-height:220px;object-position:center}
+.play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.15);cursor:pointer;transition:background .2s}
+.play-overlay:hover{background:rgba(0,0,0,0.35)}
+.play-circle{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:24px;padding-left:4px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.no-trailer .play-overlay{display:none}
+.info{padding:1.1rem 1.3rem 1.5rem}
+.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;letter-spacing:2px;text-transform:uppercase;background:#f5f5f5;color:#888;margin-bottom:10px}
+.badge.anime{background:#ff6b9d;color:#fff}
+.badge.game{background:#4f46e5;color:#fff}
+.badge.music{background:#a259ff;color:#fff}
+.badge.reddit{background:#ff4500;color:#fff}
+.ftitle{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:1px;line-height:1.1;color:#111;margin-bottom:6px}
+.meta{font-size:12px;color:#bbb;margin-bottom:10px}
+.genres{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.genre{padding:3px 10px;border-radius:20px;border:1px solid #eee;font-size:11px;color:#999}
+.rating{font-size:14px;color:#f5a623;font-weight:500;margin-bottom:10px}
+.overview{font-size:13px;color:#555;line-height:1.7}
+.reddit-body{font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+#music-cover{width:100%;aspect-ratio:1;object-fit:cover;display:none;max-height:280px}
+.player{margin-top:12px}
+.player-controls{display:flex;align-items:center;gap:14px}
+.play-btn{width:48px;height:48px;border-radius:50%;background:#e63946;border:none;cursor:pointer;font-size:18px;flex-shrink:0;color:#fff;transition:transform .1s}
+.play-btn:active{transform:scale(0.95)}
+.player-right{flex:1;min-width:0}
+.player-bar{width:100%;height:4px;background:#eee;border-radius:2px;margin:6px 0}
+.player-progress{height:4px;background:#e63946;border-radius:2px;width:0%}
+.player-time{font-size:11px;color:#bbb}
+.preview-note{font-size:11px;color:#ccc;margin-top:8px}
+#btn-next{width:100%;padding:1rem;background:#e63946;border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;cursor:pointer;margin-bottom:.8rem;transition:opacity .2s}
+#btn-next:disabled{opacity:.5;cursor:not-allowed}
+#btn-change{width:100%;padding:.9rem;background:#111;border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:background .15s}
+#btn-change:hover{background:#333}
+#trailer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;padding:1rem}
+#trailer-overlay.open{display:flex}
+#trailer-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#trailer-close:hover{background:rgba(255,255,255,0.3)}
+#trailer-frame{width:100%;max-width:600px;aspect-ratio:16/9;border:none;border-radius:8px}
+#trailer-title{color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;margin-top:14px;text-align:center}
+</style>
+</head>
+<body>
+<div id="trailer-overlay">
+  <button id="trailer-close">✕</button>
+  <iframe id="trailer-frame" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  <div id="trailer-title"></div>
+</div>
+<div id="wrap">
+<div id="screen-home">
+  <h1>WHATTO</h1>
+  <p class="sub">Random generator</p>
+  <div class="home-btns">
+    <button class="btn-random" id="btn-full-random">RANDOM</button>
+    <button class="btn-mood" id="btn-open-mood">I'm feeling... 🎭</button>
+  </div>
+</div>
+<div id="screen-mood">
+  <div class="mood-header">
+    <button class="back-btn" id="mood-back">←</button>
+    <h2>How are you feeling?</h2>
+  </div>
+  <div class="mood-grid" id="mood-grid"></div>
+</div>
+<div id="screen-result">
+  <div class="result-header">
+    <div class="mood-pill" id="active-mood-label"></div>
+    <button class="back-btn" id="result-back">✕</button>
+  </div>
+  <div class="cat-tabs">
+    <button class="cat-tab on" data-cat="movie">🎬 Film</button>
+    <button class="cat-tab" data-cat="tv">📺 TV</button>
+    <button class="cat-tab" data-cat="anime">⛩️ Anime</button>
+    <button class="cat-tab" data-cat="game">🎮 Game</button>
+    <button class="cat-tab" data-cat="music">🎵 Music</button>
+    <button class="cat-tab" data-cat="reddit">👽 Reddit</button>
+  </div>
+  <div id="reddit-cats"></div>
+  <div id="load"><div class="spin"></div><p>searching...</p></div>
+  <div id="card">
+    <div class="cover-wrap" id="cover-wrap">
+      <img id="poster" src="" alt="">
+      <div class="play-overlay" id="play-overlay"><div class="play-circle">▶</div></div>
+    </div>
+    <img id="music-cover" src="" alt="">
+    <div class="info" id="normal-info">
+      <div class="badge" id="badge">FILM</div>
+      <div class="ftitle" id="ftitle"></div>
+      <div class="meta" id="meta"></div>
+      <div class="genres" id="genres"></div>
+      <div class="rating" id="rating"></div>
+      <div class="overview" id="overview"></div>
+      <div class="reddit-body" id="reddit-body" style="display:none"></div>
+      <div class="player" id="player" style="display:none">
+        <div class="player-controls">
+          <button class="play-btn" id="play-btn">▶</button>
+          <div class="player-right">
+            <div class="player-bar"><div class="player-progress" id="progress"></div></div>
+            <div class="player-time" id="ptime">0:00 / 0:30</div>
+          </div>
+        </div>
+        <div class="preview-note">30 sec preview · iTunes</div>
+      </div>
+    </div>
+  </div>
+  <button id="btn-next">NEXT ↺</button>
+  <button id="btn-change">change mood 🎭</button>
+</div>
+</div>
+
+<script>
+const TMDB='eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNmZjYTEzMzM5ZTRmM2Y4ZmZhMzNlODEwMDQzYWY5NyIsIm5iZiI6MTc1NjgxMzYwOS45MjQsInN1YiI6IjY4YjZkOTI5ODRkNjU5NmMyMjFmMmIzZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.3JJVrlIFT8kum-sZSbjXjf39SO5-9zP2hzV-NPQDlZY';
+const WORKER='https://broken-smoke-9825.kgrlac.workers.dev';
+
+const REDDIT_CATS=[
+  {name:'👻 Creepy',subs:['nosleep','creepy','letsnotmeet','Paranormal','shortscarystories']},
+  {name:'🌀 Glitch',subs:['glitch_in_the_matrix','Thetruthishere','Unexplained','HighStrangeness']},
+  {name:'😱 WTF',subs:['tifu','mildlyinfuriating','trashy','nextfuckinglevel']},
+  {name:'😲 Unbelievable',subs:['Damnthatsinteresting','interestingasfuck','todayilearned','AskReddit']},
+  {name:'🎭 Drama',subs:['AITA','relationship_advice','entitledparents','offmychest']},
+  {name:'😂 Funny',subs:['funny','facepalm','therewasanattempt','mildlyinteresting']},
+];
+let activeRedditCat=REDDIT_CATS[0];
+
+const MUSIC_TERMS=[
+  'pop hits 2024','hip hop 2024','rock classics','country hits','jazz classics',
+  'r&b soul hits','electronic dance music','heavy metal','reggae hits','latin pop',
+  'indie rock','alternative rock','trap music','80s greatest hits','90s hits',
+  'drake official','taylor swift official','eminem official','beyonce official',
+  'coldplay official','kendrick lamar official','the weeknd official',
+  'metallica official','nirvana official','dua lipa official','bad bunny official',
+];
+
+const MOODS=[
+  {name:'I hate everyone',emoji:'😤',movieGenres:[35,27],tvGenres:[35,27],animeGenres:['Comedy','Horror'],gameGenres:[4,31],sort:'vote_count.asc'},
+  {name:'Bored af',emoji:'😑',movieGenres:[28,53,9648],tvGenres:[80,53,9648],animeGenres:['Action','Adventure'],gameGenres:[5,14],sort:'popularity.desc'},
+  {name:'Just existing',emoji:'🫥',movieGenres:[],tvGenres:[],animeGenres:[],gameGenres:[],sort:'vote_count.asc'},
+  {name:'Send help',emoji:'🙃',movieGenres:[35,10751],tvGenres:[35,10751],animeGenres:['Comedy','Slice of Life'],gameGenres:[31,32],sort:'vote_average.desc'},
+  {name:'Existential crisis mode',emoji:'🌀',movieGenres:[878,18,14],tvGenres:[10765,18],animeGenres:['Psychological','Sci-Fi'],gameGenres:[12,21],sort:'vote_count.asc'},
+  {name:'3am bad decisions',emoji:'🌙',movieGenres:[27,53,9648],tvGenres:[27,9648],animeGenres:['Horror','Mystery'],gameGenres:[15,31],sort:'vote_count.asc'},
+  {name:'My therapist would hate this',emoji:'🛋️',movieGenres:[80,53,18],tvGenres:[80,18],animeGenres:['Psychological','Drama'],gameGenres:[15,21],sort:'vote_count.asc'},
+  {name:'Zero braincells',emoji:'🧠',movieGenres:[28,12],tvGenres:[28,35],animeGenres:['Action','Comedy'],gameGenres:[5,14],sort:'popularity.desc'},
+  {name:'Doomscrolling champion',emoji:'📱',movieGenres:[99,36],tvGenres:[99,10763],animeGenres:['Slice of Life','Drama'],gameGenres:[13,26],sort:'vote_average.desc'},
+  {name:'Built different',emoji:'💪',movieGenres:[36,18,28],tvGenres:[18,36],animeGenres:['Sports','Action'],gameGenres:[14,5],sort:'vote_average.desc'},
+  {name:'Delulu but make it work',emoji:'✨',movieGenres:[10749,35,14],tvGenres:[10749,35],animeGenres:['Romance','Fantasy'],gameGenres:[12,31],sort:'vote_count.asc'},
+  {name:'Dopamine dealer',emoji:'⚡',movieGenres:[35,12,16],tvGenres:[35,16],animeGenres:['Comedy','Adventure'],gameGenres:[8,5],sort:'vote_average.desc'},
+  {name:'Chaotic good energy',emoji:'🎲',movieGenres:[12,14,28],tvGenres:[12,14,28],animeGenres:['Action','Fantasy'],gameGenres:[5,31],sort:'vote_count.asc'},
+  {name:'Brain rotted but happy',emoji:'🍔',movieGenres:[16,35,10751],tvGenres:[16,35],animeGenres:['Comedy','Slice of Life'],gameGenres:[8,31],sort:'popularity.desc'},
+];
+
+const gMap={28:'Action',18:'Drama',35:'Comedy',27:'Horror',878:'Sci-Fi',10749:'Romance',12:'Adventure',16:'Animation',80:'Crime',99:'Documentary',14:'Fantasy',53:'Thriller',37:'Western',9648:'Mystery',10751:'Family',10765:'Sci-Fi/Fantasy',10759:'Action/Adventure',36:'History'};
+let activeMood=null,activeCat='movie',curTrailerId=null,curTitle='';
+let audio=null,progInterval=null;
+
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function fmt(s){s=Math.floor(s||0);return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60;}
+
+function showScreen(name){
+  document.getElementById('screen-home').style.display=name==='home'?'flex':'none';
+  document.getElementById('screen-mood').style.display=name==='mood'?'flex':'none';
+  document.getElementById('screen-result').style.display=name==='result'?'flex':'none';
+}
+
+const moodGrid=document.getElementById('mood-grid');
+MOODS.forEach((m,i)=>{
+  const card=document.createElement('div');
+  card.className='mood-card';
+  card.innerHTML=`<div class="mood-emoji">${m.emoji}</div><div class="mood-name">${m.name}</div>`;
+  card.addEventListener('click',()=>selectMood(i));
+  moodGrid.appendChild(card);
+});
+
+const rcatsEl=document.getElementById('reddit-cats');
+REDDIT_CATS.forEach((c,i)=>{
+  const btn=document.createElement('button');
+  btn.className='rcat-btn'+(i===0?' on':'');
+  btn.textContent=c.name;
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.rcat-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    activeRedditCat=c;
+    fetchAndShow();
+  });
+  rcatsEl.appendChild(btn);
+});
+
+function selectMood(i){
+  activeMood=i;
+  document.getElementById('active-mood-label').textContent=MOODS[i].emoji+' '+MOODS[i].name;
+  showScreen('result');
+  fetchAndShow();
+}
+
+function stopAudio(){
+  if(audio){audio.pause();audio=null;}
+  if(progInterval){clearInterval(progInterval);progInterval=null;}
+  const pb=document.getElementById('play-btn');
+  if(pb) pb.textContent='▶';
+  const pr=document.getElementById('progress');
+  if(pr) pr.style.width='0%';
+  const pt=document.getElementById('ptime');
+  if(pt) pt.textContent='0:00 / 0:30';
+}
+
+async function tmdb(path){
+  const r=await fetch('https://api.themoviedb.org/3'+path,{headers:{Authorization:'Bearer '+TMDB}});
+  if(!r.ok) throw new Error('x');
+  return r.json();
+}
+async function getTrailerTMDB(id,type){
+  try{
+    const d=await tmdb(`/${type}/${id}/videos?language=en-US`);
+    const t=(d.results||[]).filter(v=>v.site==='YouTube'&&(v.type==='Trailer'||v.type==='Teaser'));
+    return t.length?t[0].key:null;
+  }catch(e){return null;}
+}
+async function fetchMovie(){
+  const mood=activeMood!==null?MOODS[activeMood]:null;
+  const page=ri(1,300);
+  const genres=mood?mood.movieGenres:[];
+  const sort=mood?mood.sort:'vote_count.asc';
+  if(genres.length){
+    const genre=genres[ri(0,genres.length-1)];
+    const d=await tmdb(`/discover/movie?page=${page}&sort_by=${sort}&vote_count.gte=10&language=en-US&with_genres=${genre}`);
+    if(d.results?.length){const it=d.results[ri(0,d.results.length-1)];return{title:it.title,year:(it.release_date||'').slice(0,4),overview:it.overview,poster:it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:'',rating:it.vote_average?(+it.vote_average).toFixed(1):'',genres:(it.genre_ids||[]).map(id=>gMap[id]).filter(Boolean).slice(0,4),trailerId:await getTrailerTMDB(it.id,'movie'),cat:'movie'};}
+  }
+  const d2=await tmdb(`/discover/movie?page=${page}&sort_by=${sort}&vote_count.gte=10&language=en-US`);
+  if(!d2.results?.length) throw new Error('x');
+  const it=d2.results[ri(0,d2.results.length-1)];
+  return{title:it.title,year:(it.release_date||'').slice(0,4),overview:it.overview,poster:it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:'',rating:it.vote_average?(+it.vote_average).toFixed(1):'',genres:(it.genre_ids||[]).map(id=>gMap[id]).filter(Boolean).slice(0,4),trailerId:await getTrailerTMDB(it.id,'movie'),cat:'movie'};
+}
+async function fetchTV(){
+  const mood=activeMood!==null?MOODS[activeMood]:null;
+  const page=ri(1,300);
+  const genres=mood?mood.tvGenres:[];
+  const sort=mood?mood.sort:'vote_count.asc';
+  if(genres.length){
+    const genre=genres[ri(0,genres.length-1)];
+    const d=await tmdb(`/discover/tv?page=${page}&sort_by=${sort}&vote_count.gte=10&language=en-US&with_genres=${genre}`);
+    if(d.results?.length){const it=d.results[ri(0,d.results.length-1)];return{title:it.name,year:(it.first_air_date||'').slice(0,4),overview:it.overview,poster:it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:'',rating:it.vote_average?(+it.vote_average).toFixed(1):'',genres:(it.genre_ids||[]).map(id=>gMap[id]).filter(Boolean).slice(0,4),trailerId:await getTrailerTMDB(it.id,'tv'),cat:'tv'};}
+  }
+  const d2=await tmdb(`/discover/tv?page=${page}&sort_by=${sort}&vote_count.gte=10&language=en-US`);
+  if(!d2.results?.length) throw new Error('x');
+  const it=d2.results[ri(0,d2.results.length-1)];
+  return{title:it.name,year:(it.first_air_date||'').slice(0,4),overview:it.overview,poster:it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:'',rating:it.vote_average?(+it.vote_average).toFixed(1):'',genres:(it.genre_ids||[]).map(id=>gMap[id]).filter(Boolean).slice(0,4),trailerId:await getTrailerTMDB(it.id,'tv'),cat:'tv'};
+}
+async function fetchAnime(){
+  const mood=activeMood!==null?MOODS[activeMood]:null;
+  const genres=mood&&mood.animeGenres.length?mood.animeGenres:[];
+  const genre=genres.length?genres[ri(0,genres.length-1)]:null;
+  const page=ri(1,50);
+  const query=`query($page:Int,$genre:String){Page(page:$page,perPage:20){media(type:ANIME,sort:POPULARITY_DESC,genre:$genre,format_in:[TV,MOVIE,OVA],status_in:[FINISHED,RELEASING]){title{english romaji}description(asHtml:false)coverImage{extraLarge large}startDate{year}averageScore genres trailer{id site}}}}`;
+  const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query,variables:{page,genre}})});
+  if(!r.ok) throw new Error('x');
+  const d=await r.json();
+  const list=(d.data?.Page?.media||[]).filter(a=>a.coverImage?.extraLarge||a.coverImage?.large);
+  if(!list.length) throw new Error('x');
+  const withTrailer=list.filter(a=>a.trailer?.site==='youtube'&&a.trailer?.id);
+  const it=withTrailer.length?withTrailer[ri(0,withTrailer.length-1)]:list[ri(0,list.length-1)];
+  return{title:it.title?.english||it.title?.romaji||'—',year:it.startDate?.year?String(it.startDate.year):'',overview:(it.description||'').replace(/<[^>]*>/g,'').slice(0,500),poster:it.coverImage?.extraLarge||it.coverImage?.large||'',rating:it.averageScore?(it.averageScore/10).toFixed(1):'',genres:(it.genres||[]).slice(0,4),trailerId:(it.trailer?.site==='youtube'&&it.trailer?.id)?it.trailer.id:null,cat:'anime'};
+}
+async function fetchGame(){
+  const mood=activeMood!==null?MOODS[activeMood]:null;
+  const genres=mood&&mood.gameGenres.length?mood.gameGenres:[];
+  const genre=genres.length?genres[ri(0,genres.length-1)]:null;
+  const offset=ri(0,500);
+  let where='where cover != null & rating > 60 & rating_count > 20 & first_release_date != null';
+  if(genre) where+=` & genres = (${genre})`;
+  const body=`fields name,cover.url,summary,first_release_date,rating,genres.name,videos.video_id,platforms.name; ${where}; limit 20; offset ${offset}; sort rating_count desc;`;
+  const r=await fetch(`${WORKER}/igdb`,{method:'POST',body});
+  if(!r.ok) throw new Error('x');
+  const d=await r.json();
+  if(!d.length) throw new Error('x');
+  const withTrailer=d.filter(g=>g.videos?.length);
+  const it=withTrailer.length?withTrailer[ri(0,withTrailer.length-1)]:d[ri(0,d.length-1)];
+  let poster='';
+  if(it.cover?.url) poster=it.cover.url.replace('t_thumb','t_cover_big').replace('//','https://');
+  const trailerId=it.videos?.length?it.videos[0].video_id:null;
+  const year=it.first_release_date?new Date(it.first_release_date*1000).getFullYear().toString():'';
+  const platforms=(it.platforms||[]).map(p=>p.name).slice(0,3).join(' · ');
+  return{title:it.name,year,overview:it.summary||'',poster,rating:it.rating?(it.rating/10).toFixed(1):'',genres:(it.genres||[]).map(g=>g.name).slice(0,4),trailerId,cat:'game',platforms};
+}
+async function fetchMusic(){
+  const term=MUSIC_TERMS[ri(0,MUSIC_TERMS.length-1)];
+  const offset=ri(0,150);
+  const r=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=50&offset=${offset}`);
+  if(!r.ok) throw new Error('x');
+  const d=await r.json();
+  const tracks=d.results.filter(t=>t.previewUrl&&t.trackName&&t.artistName);
+  if(!tracks.length) throw new Error('x');
+  const t=tracks[ri(0,tracks.length-1)];
+  return{cat:'music',title:t.trackName,artist:t.artistName,album:t.collectionName||'',cover:t.artworkUrl100?.replace('100x100','600x600')||'',preview:t.previewUrl,genre:t.primaryGenreName||'Music'};
+}
+async function fetchReddit(){
+  const sub=activeRedditCat.subs[ri(0,activeRedditCat.subs.length-1)];
+  const sort=['hot','top','new'][ri(0,2)];
+  const r=await fetch(`${WORKER}/reddit?sub=${sub}&sort=${sort}`);
+  if(!r.ok) throw new Error('x');
+  const d=await r.json();
+  const posts=d.data.children.filter(p=>{
+    const t=p.data.selftext;
+    return t&&t.length>300&&!p.data.stickied&&t!=='[removed]'&&t!=='[deleted]';
+  });
+  if(!posts.length) throw new Error('x');
+  const post=posts[ri(0,posts.length-1)].data;
+  return{cat:'reddit',subreddit:'r/'+sub,category:activeRedditCat.name,title:post.title,text:post.selftext,score:post.score,comments:post.num_comments,author:post.author};
+}
+
+async function fetchContent(){
+  if(activeCat==='movie') return fetchMovie();
+  if(activeCat==='tv') return fetchTV();
+  if(activeCat==='anime') return fetchAnime();
+  if(activeCat==='game') return fetchGame();
+  if(activeCat==='music') return fetchMusic();
+  return fetchReddit();
+}
+
+function setupPlayer(previewUrl){
+  stopAudio();
+  const playBtn=document.getElementById('play-btn');
+  const progress=document.getElementById('progress');
+  const ptime=document.getElementById('ptime');
+  playBtn.textContent='▶';
+  playBtn.onclick=()=>{
+    if(!audio){
+      audio=new Audio(previewUrl);
+      audio.play().catch(()=>{});
+      playBtn.textContent='⏸';
+      progInterval=setInterval(()=>{
+        if(!audio) return;
+        const pct=(audio.currentTime/30)*100;
+        progress.style.width=Math.min(pct,100)+'%';
+        ptime.textContent=fmt(audio.currentTime)+' / 0:30';
+        if(audio.ended||audio.currentTime>=30){stopAudio();}
+      },200);
+    } else if(audio.paused){audio.play();playBtn.textContent='⏸';}
+    else{audio.pause();playBtn.textContent='▶';}
+  };
+}
+
+async function fetchAndShow(){
+  stopAudio();
+  closeTrailer();
+  const btn=document.getElementById('btn-next');
+  btn.disabled=true;
+  document.getElementById('load').style.display='block';
+  document.getElementById('card').style.display='none';
+  document.getElementById('reddit-cats').style.display=activeCat==='reddit'?'flex':'none';
+  try{
+    const it=await fetchContent();
+    const badgeEl=document.getElementById('badge');
+    const coverWrap=document.getElementById('cover-wrap');
+    const musicCover=document.getElementById('music-cover');
+    const player=document.getElementById('player');
+    const overview=document.getElementById('overview');
+    const redditBody=document.getElementById('reddit-body');
+
+    coverWrap.style.display='none';
+    musicCover.style.display='none';
+    player.style.display='none';
+    overview.style.display='block';
+    overview.textContent='';
+    redditBody.style.display='none';
+    redditBody.textContent='';
+    document.getElementById('genres').innerHTML='';
+    document.getElementById('rating').innerHTML='';
+
+    if(it.cat==='reddit'){
+      badgeEl.textContent=it.category;
+      badgeEl.className='badge reddit';
+      document.getElementById('ftitle').textContent=it.title;
+      document.getElementById('meta').innerHTML=`${it.subreddit} · u/${it.author} · ▲ ${it.score.toLocaleString()} · 💬 ${it.comments}`;
+      overview.style.display='none';
+      redditBody.style.display='block';
+      redditBody.textContent=it.text;
+    } else if(it.cat==='music'){
+      badgeEl.textContent='🎵 '+it.genre;
+      badgeEl.className='badge music';
+      document.getElementById('ftitle').textContent=it.title;
+      document.getElementById('meta').innerHTML=`<strong style="color:#111">${it.artist}</strong>${it.album?' · '+it.album:''}`;
+      if(it.cover){musicCover.src=it.cover;musicCover.style.display='block';}
+      player.style.display='block';
+      setupPlayer(it.preview);
+    } else {
+      if(it.cat==='anime'){badgeEl.textContent='ANIME';badgeEl.className='badge anime';}
+      else if(it.cat==='game'){badgeEl.textContent='GAME';badgeEl.className='badge game';}
+      else if(it.cat==='tv'){badgeEl.textContent='TV SHOW';badgeEl.className='badge';}
+      else{badgeEl.textContent='FILM';badgeEl.className='badge';}
+      curTrailerId=it.trailerId||null;
+      curTitle=it.title;
+      document.getElementById('ftitle').textContent=it.title||'—';
+      let metaStr=it.year||'';
+      if(it.cat==='game'&&it.platforms) metaStr+=(metaStr?' · ':'')+it.platforms;
+      document.getElementById('meta').textContent=metaStr;
+      document.getElementById('rating').innerHTML=it.rating?`★ ${it.rating}`:'';
+      document.getElementById('genres').innerHTML=(it.genres||[]).map(g=>`<span class="genre">${g}</span>`).join('');
+      overview.textContent=it.overview||'';
+      coverWrap.style.display='block';
+      const posterEl=document.getElementById('poster');
+      if(it.poster){posterEl.src=it.poster;posterEl.className=it.cat==='game'?'landscape':'';}
+      const po=document.getElementById('play-overlay');
+      if(it.trailerId){coverWrap.classList.remove('no-trailer');po.style.display='flex';}
+      else{coverWrap.classList.add('no-trailer');po.style.display='none';}
+    }
+    document.getElementById('card').style.display='block';
+  }catch(e){
+    setTimeout(fetchAndShow,600);
+    return;
+  }finally{
+    btn.disabled=false;
+    document.getElementById('load').style.display='none';
+  }
+}
+
+function closeTrailer(){
+  document.getElementById('trailer-frame').src='';
+  document.getElementById('trailer-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+document.querySelectorAll('.cat-tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.cat-tab').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    activeCat=t.dataset.cat;
+    stopAudio();
+    fetchAndShow();
+  });
+});
+document.getElementById('btn-full-random').addEventListener('click',()=>{
+  activeMood=null;
+  const cats=['movie','tv','anime','game','music','reddit'];
+  activeCat=cats[ri(0,cats.length-1)];
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.toggle('on',t.dataset.cat===activeCat));
+  document.getElementById('active-mood-label').textContent='🎲 Total random';
+  showScreen('result');
+  fetchAndShow();
+});
+document.getElementById('btn-open-mood').addEventListener('click',()=>showScreen('mood'));
+document.getElementById('mood-back').addEventListener('click',()=>showScreen('home'));
+document.getElementById('result-back').addEventListener('click',()=>{stopAudio();showScreen('home');});
+document.getElementById('btn-next').addEventListener('click',fetchAndShow);
+document.getElementById('btn-change').addEventListener('click',()=>showScreen('mood'));
+document.getElementById('play-overlay').addEventListener('click',()=>{
+  if(!curTrailerId) return;
+  document.getElementById('trailer-frame').src=`https://www.youtube.com/embed/${curTrailerId}?autoplay=1&rel=0`;
+  document.getElementById('trailer-title').textContent=curTitle;
+  document.getElementById('trailer-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+});
+document.getElementById('trailer-close').addEventListener('click',closeTrailer);
+document.getElementById('trailer-overlay').addEventListener('click',function(e){if(e.target===this)closeTrailer();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTrailer();});
+showScreen('home');
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/whatto/sw.js');
+</script>
+</body>
+</html>
